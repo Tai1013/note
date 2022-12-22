@@ -9,7 +9,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const querySnapshot = await getDocs(collection(db, 'Note'));
+const querySnapshot = await getDocs(collection(db, 'Note'))
 querySnapshot.forEach((doc) => {
   console.log(doc.data())
 });
