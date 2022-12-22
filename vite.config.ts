@@ -7,7 +7,8 @@ export default defineConfig({
   plugins: [vue()],
   base: './',
   build: {
-    target: 'esnext'
+    target: 'esnext',
+    outDir: 'docs'
   },
   resolve: {
     alias: {
