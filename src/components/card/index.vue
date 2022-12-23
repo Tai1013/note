@@ -1,9 +1,9 @@
 <template lang="pug">
-el-card.card-comp(:style="cardStyle")
+el-card.card-comp(:style="cardStyle" :class="'card-' + data.Id")
   template(#header)
     .card-header
       .name {{ data.Name }} 説：
-      el-icon
+      el-icon(@click="deleteHandler")
         v-icon(icon="CloseBold")
   .card-content {{ data.Content }}
   el-image(:src="data.Image" fill="fill")
@@ -13,17 +13,20 @@ el-card.card-comp(:style="cardStyle")
 <script setup lang="ts">
 import interact from 'interactjs'
 import type { PropType } from 'vue'
-import type { CardData } from './define'
+import type { DocData } from '@/server'
 import { ref, computed } from 'vue'
 import { ElCard, ElIcon, ElImage } from 'element-plus'
 import { useDateTime } from '@/use'
+import { updateNoteDoc, deleteNotDoc } from '@/server'
 
 const props = defineProps({
   data: {
-    type: Object as PropType<CardData>,
+    type: Object as PropType<DocData>,
     required: true
   }
 })
+
+const emits = defineEmits(['update'])
 
 const { getTimeFromNow } = useDateTime()
 
@@ -36,26 +39,37 @@ const cardStyle = computed(() => ({
 }))
 const time = computed(() => getTimeFromNow(props.data.CreateTime))
 
+const deleteHandler = async () => {
+  const data = {
+    Id: props.data.Id
+  }
+  await deleteNotDoc(data)
+  emits('update')
+}
+
 const dragMoveListener = (event: { target: any; dx: number; dy: number }) => {
   const target = event.target
-  const x = parseInt(((parseInt(target.getAttribute('data-x')) || 0) + event.dx).toFixed(0))
-  const y = parseInt(((parseInt(target.getAttribute('data-y')) || 0) + event.dy).toFixed(0))
+  const x = parseInt(((parseInt(target.getAttribute('data-x')) || props.data.Postion[0]) + event.dx).toFixed(0))
+  const y = parseInt(((parseInt(target.getAttribute('data-y')) || props.data.Postion[1]) + event.dy).toFixed(0))
   cardXY.value = [x, y]
   target.setAttribute('data-x', x)
   target.setAttribute('data-y', y)
 }
 
 const dragEndListener = () => {
-  console.log(cardXY.value)
+  const data = {
+    Id: props.data.Id,
+    Postion: cardXY.value
+  }
+  updateNoteDoc(data)
 }
 
-interact('.card-comp').draggable({
+interact(`.card-${props.data.Id}`).draggable({
   listeners: {
     move: dragMoveListener,
     end: dragEndListener
   }
 })
-
 </script>
 
 <style scoped lang="scss">

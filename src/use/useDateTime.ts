@@ -7,7 +7,7 @@ dayjs.extend(relativeTime)
 const timeInterval = ref()
 
 const getDateTime = () => {
-  return dayjs().format('YYYY-MM-DD HH:mm:ss (ZZ)')
+  return dayjs().format('YYYY-MM-DD HH:mm:ss')
 }
 
 export const useDateTime = () => {
