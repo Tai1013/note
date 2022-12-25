@@ -1,27 +1,29 @@
 <template lang="pug">
-el-card.card-comp(:style="cardStyle" :class="'card-' + data.Id")
+el-card.card-comp(v-if="cardState" :style="cardStyle" :class="`card-${data.Id}`" shadow="hover")
   template(#header)
     .card-header
-      .name {{ data.Name }} 説：
-      el-icon(@click="deleteHandler")
-        v-icon(icon="CloseBold")
-  .card-content {{ data.Content }}
-  el-image(:src="data.Image" fill="fill")
-  .time {{ time }}
+      .header-name
+        span {{ data.Name }} 説：
+      el-button(link @click="deleteNote")
+        el-icon()
+          v-icon(icon="CloseBold")
+  .card-content(v-if="data.Content !== ''") {{ data.Content }}
+  el-image(v-if="data.Image !== ''" :src="data.Image" fill="fill")
+  .card-time {{ timeFrom }}
 </template>
 
 <script setup lang="ts">
-import interact from 'interactjs'
 import type { PropType } from 'vue'
-import type { DocData } from '@/server'
-import { ref, computed } from 'vue'
-import { ElCard, ElIcon, ElImage } from 'element-plus'
-import { useDateTime } from '@/use'
-import { updateNoteDoc, deleteNotDoc } from '@/server'
+import type { NoteData, UpdateNote } from '@/server'
+import { ref, computed, onMounted } from 'vue'
+import { ElCard, ElIcon, ElButton, ElImage } from 'element-plus'
+import { useDateTime, useMessage } from '@/use'
+import { firebaseXhr } from '@/server'
+import interact from 'interactjs'
 
 const props = defineProps({
   data: {
-    type: Object as PropType<DocData>,
+    type: Object as PropType<NoteData>,
     required: true
   }
 })
@@ -29,82 +31,55 @@ const props = defineProps({
 const emits = defineEmits(['update'])
 
 const { getTimeFromNow } = useDateTime()
+const { $message } = useMessage()
 
-const cardXY = ref([props.data.Postion[0], props.data.Postion[1]])
+const cardState = ref(true)
+const timeFrom = ref(getTimeFromNow(props.data.CreateTime))
+const positionXY = ref<[number, number]>([props.data.Postion[0], props.data.Postion[1]])
 
 const cardStyle = computed(() => ({
-  left: `${cardXY.value[0]}px`,
-  top: `${cardXY.value[1]}px`,
+  left: `${positionXY.value[0]}px`,
+  top: `${positionXY.value[1]}px`,
   backgroundColor: props.data.Color
 }))
-const time = computed(() => getTimeFromNow(props.data.CreateTime))
 
-const deleteHandler = async () => {
+const deleteNote = async () => {
   const data = {
     Id: props.data.Id
   }
-  await deleteNotDoc(data)
-  emits('update')
+  await firebaseXhr({ method: 'delete', data })
+    .then(res => {
+      cardState.value = false
+      emits('update')
+      $message.success(res as string)
+    })
+    .catch(err => $message.error(err ? 'API錯誤' : '刪除失敗'))
 }
 
-const dragMoveListener = (event: { target: any; dx: number; dy: number }) => {
-  const target = event.target
-  const x = parseInt(((parseInt(target.getAttribute('data-x')) || props.data.Postion[0]) + event.dx).toFixed(0))
-  const y = parseInt(((parseInt(target.getAttribute('data-y')) || props.data.Postion[1]) + event.dy).toFixed(0))
-  cardXY.value = [x, y]
-  target.setAttribute('data-x', x)
-  target.setAttribute('data-y', y)
-}
-
-const dragEndListener = () => {
-  const data = {
+const updateNote = async () => {
+  const data: UpdateNote = {
     Id: props.data.Id,
-    Postion: cardXY.value
+    Postion: positionXY.value
   }
-  updateNoteDoc(data)
+  await firebaseXhr({ method: 'update', data })
+    .catch(err => $message.error(err ? 'API錯誤' : '更新失敗'))
 }
 
-interact(`.card-${props.data.Id}`).draggable({
-  listeners: {
-    move: dragMoveListener,
-    end: dragEndListener
-  }
+const dragMoveListener = (event: { dx: number; dy: number }) => {
+  positionXY.value[0] += parseInt(event.dx.toFixed(0))
+  positionXY.value[1] += parseInt(event.dy.toFixed(0))
+}
+
+onMounted(() => {
+  interact(`.card-${props.data.Id}`).draggable({
+    listeners: {
+      move: dragMoveListener,
+      end: updateNote
+    }
+  })
 })
 </script>
 
 <style scoped lang="scss">
-.card-comp {
-  position: absolute;
-  max-width: 400px;
-  min-width: 200px;
-  min-height: 100px;
-}
-.card-header {
-  display: flex;
-  justify-content: space-between;
-}
-.el-icon {
-  cursor: pointer;
-}
-:deep(.el-card__header) {
-  padding: 10px;
-  padding-bottom: 0;
-  border: none;
-}
-:deep(.el-card__body) {
-  padding: 10px;
-}
-.card-content {
-  margin-bottom: 5px;
-  font-size: 24px;
-}
-.el-image {
-  border-radius: 5px;
-  vertical-align: bottom;
-}
-.time {
-  margin-top: 10px;
-  text-align: right;
-  font-size: 10px;
-}
+@import './style.scss';
 </style>

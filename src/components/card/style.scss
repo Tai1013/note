@@ -1,0 +1,40 @@
+.card-comp {
+  position: absolute;
+  max-width: 400px;
+  min-width: 200px;
+}
+
+:deep(.el-card__header) {
+  padding: 10px;
+  padding-bottom: 0;
+  border: none;
+}
+
+:deep(.el-card__body) {
+  padding: 10px;
+}
+
+.el-image {
+  border-radius: 5px;
+  vertical-align: bottom;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  .header-name {
+    font-size: 14px;
+  }
+}
+
+.card-content {
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+.card-time {
+  text-align: end;
+  margin-top: 10px;
+  font-size: 12px;
+}

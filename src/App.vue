@@ -5,22 +5,23 @@ add-comp(@update="getNotes")
 </template>
 
 <script setup lang="ts">
-import type { DocData } from './server'
+import type { NoteData } from './server'
 import { ref, onMounted } from 'vue'
-import { getNoteDocs } from './server'
+import { firebaseXhr } from './server'
+import { useMessage } from './use'
 import AddComp from './components/add/index.vue'
 import CardComp from './components/card/index.vue'
 
-const notes = ref<DocData[]>([])
+const { $message } = useMessage()
+const notes = ref<NoteData[]>([])
 
 const getNotes = async () => {
-  notes.value = await getNoteDocs()
+  await firebaseXhr({ method: 'get' })
+    .then(res => notes.value = res as NoteData[])
+    .catch(err => $message.error(err ? 'API錯誤' : '取得失敗'))
 }
 
 onMounted(() => {
   getNotes()
 })
 </script>
-
-<style scoped>
-</style>
