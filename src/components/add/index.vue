@@ -86,9 +86,9 @@ const addNote = async (formEl: FormInstance | undefined) => {
           isDialog.value = false
         })
         .catch(err => $message.error(err ? 'API錯誤' : '新增失敗'))
-        .finally(() => unload())
     }
   })
+  unload()
 }
 </script>
 
