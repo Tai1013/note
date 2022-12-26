@@ -3,7 +3,7 @@ el-button.add-button(circle @click="isDialog = true")
   el-icon
     v-icon(icon="Plus")
 .add-dialog
-  el-dialog(v-model="isDialog" title="新增" width="95%")
+  el-dialog(v-model="isDialog" title="新增" width="95%" @close="close")
     el-form(ref="formRef" :model="form" :rules="rules" label-position="top" :disabled="isLoading")
       el-form-item(label="名稱" prop="Name")
         el-input(v-model="form.Name")
@@ -24,8 +24,8 @@ el-button.add-button(circle @click="isDialog = true")
           :on-change="handleChange"
           :class="{ 'is-disabled': isLoading }"
         )
-          el-image(:src="form.Image")
-          el-icon
+          el-image(v-if="form.Image !== ''" :src="form.Image")
+          el-icon(v-else)
             v-icon(icon="Plus")
       el-button(type="primary" @click="addNote(formRef)") 送出
 </template>
@@ -65,6 +65,7 @@ const handleChange: UploadProps['onChange'] = (uploadFile) => {
     .then(res => form.Image = res)
     .catch(err => {
       upladRef.value.clearFiles()
+      form.Image = ''
       $message.error(err)
     })
 }
@@ -82,13 +83,19 @@ const addNote = async (formEl: FormInstance | undefined) => {
         .then(res => {
           $message.success(res as string)
           emits('update')
-          formEl.resetFields()
-          isDialog.value = false
+          close()
         })
         .catch(err => $message.error(err ? 'API錯誤' : '新增失敗'))
     }
   })
   unload()
+}
+
+const close = () => {
+  if (formRef.value) formRef.value.resetFields()
+  upladRef.value.clearFiles()
+  form.Image = ''
+  isDialog.value = false
 }
 </script>
 

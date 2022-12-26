@@ -35,8 +35,11 @@
   :deep(.el-upload) {
     .el-icon {
       font-size: 28px;
-      height: 100px;
+      height: 150px;
     }
+  }
+  :deep(.el-upload-dragger) {
+    padding: 10px;
   }
   &.is-disabled {
     :deep(.el-upload-dragger) {
@@ -45,5 +48,8 @@
       background-color: var(--el-disabled-bg-color);
       border: 1px dashed var(--el-disabled-border-color);
     }
+  }
+  :deep(.el-image) {
+    display: block;
   }
 }
